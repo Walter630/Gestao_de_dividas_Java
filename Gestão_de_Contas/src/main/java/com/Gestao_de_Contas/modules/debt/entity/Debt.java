@@ -1,5 +1,7 @@
 package com.Gestao_de_Contas.modules.debt.entity;
 
+import com.Gestao_de_Contas.modules.client.entity.Client;
+import com.Gestao_de_Contas.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,9 +23,7 @@ public class Debt {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String devedorNome;
-    private String devedorEmail;
-    private BigDecimal valor;
+    private BigDecimal valorOriginal;
     private String descricao;
 
     private LocalDateTime dataVencimento;
@@ -33,10 +33,15 @@ public class Debt {
 
     @Enumerated(EnumType.STRING)
     private TaxType taxType;
-    private BigDecimal taxValue;
+    private BigDecimal taxJuros;
 
-    private BigDecimal valorAtual;
-    private LocalDateTime lembreteEnviado;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id",  nullable = false)
+    private User userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id",  nullable = false)
+    private Client clientId;
 
     @CreationTimestamp
     private LocalDateTime createAt;
