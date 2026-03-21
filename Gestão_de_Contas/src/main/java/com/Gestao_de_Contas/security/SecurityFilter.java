@@ -26,11 +26,13 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         if (header != null){
             var subjectToken = this.jwtProvider.validateToken(header);
-            if (subjectToken.isEmpty()){
+            if (subjectToken.isBlank()){
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
+
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(subjectToken,
+                    null, // credentials — nulo pois já foi validado
                     Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(auth);
         }

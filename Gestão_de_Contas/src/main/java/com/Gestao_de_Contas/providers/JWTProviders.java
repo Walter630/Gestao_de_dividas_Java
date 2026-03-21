@@ -6,6 +6,8 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 
 @Service
 public class JWTProviders {
@@ -26,5 +28,14 @@ public class JWTProviders {
             e.printStackTrace();
             return "";
         }
+    }
+
+    public String generateToken(String subject) {
+        Algorithm  algorithm = Algorithm.HMAC256(secretToken);
+        var tokenCreate = JWT.create()
+                .withSubject(subject)
+                .withExpiresAt(Instant.now().plus(Duration.ofMinutes(1)))
+                .sign(algorithm);
+        return tokenCreate;
     }
 }
