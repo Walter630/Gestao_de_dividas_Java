@@ -1,42 +1,92 @@
 package com.Gestao_de_Contas.modules.user.controller;
 
 import com.Gestao_de_Contas.modules.user.dto.AuthUserDTO;
-import com.Gestao_de_Contas.modules.user.dto.UserDTO;
+import com.Gestao_de_Contas.modules.user.dto.TokenDTO;
 import com.Gestao_de_Contas.modules.user.entity.User;
 import com.Gestao_de_Contas.modules.user.useCase.AuthUserUseCase;
+import com.Gestao_de_Contas.modules.user.useCase.LoginAttemptService;
 import com.Gestao_de_Contas.modules.user.useCase.RefreshTokenUseCase;
 import com.Gestao_de_Contas.modules.user.useCase.UserUseCase;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserUseCase userUseCase;
-    @Autowired
-    private AuthUserUseCase  authUserUseCase;
-    @Autowired
-    private RefreshTokenUseCase refreshTokenUseCase;
 
-    @PostMapping("/refreshToken")
-    public ResponseEntity<Object> generateToken(@RequestBody String refreshToken){
+    private final LoginAttemptService loginAttemptService;
+    private final AuthUserUseCase authUserUseCase;
+    private final RefreshTokenUseCase refreshTokenUseCase;
+    private final UserUseCase userUseCase;
+
+    // ─── Cadastro ────────────────────────────────────────────────────────────
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody User user) {
         try {
-            var refreshTokenValid = this.refreshTokenUseCase.execute(refreshToken);
-            return ResponseEntity.ok().body(refreshTokenValid);
-        }catch (Exception ex){
+            var created = userUseCase.execute(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
 
+    // ─── Login ───────────────────────────────────────────────────────────────
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@Valid @RequestBody AuthUserDTO user){
+    public ResponseEntity<?> login(
+            @Valid @RequestBody AuthUserDTO request,
+            HttpServletRequest httpRequest) {
+
+        String ip       = httpRequest.getRemoteAddr();
+        String username = request.getUsername();
+
+        // 1. Checa bloqueio antes de qualquer operação
+        if (loginAttemptService.isBlocked(username, ip)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Conta bloqueada por 1 minuto. Tente novamente em breve.");
+        }
+
         try {
-            var token = this.authUserUseCase.execute(user);
-            return ResponseEntity.ok().body(token);
-        }catch (Exception ex){
+            // 2. Tenta autenticar passando o DTO corretamente
+            TokenDTO token = authUserUseCase.execute(request);
+
+            // 3. Sucesso: zera o contador no Redis
+            loginAttemptService.loginSucceeded(username, ip);
+
+            return ResponseEntity.ok(token);
+
+        } catch (UsernameNotFoundException ex) {
+            // ✅ 4. Falha: incrementa contador e informa tentativas restantes
+            loginAttemptService.loginFailed(username, ip);
+            int restantes = loginAttemptService.remainingAttempts(username);
+            String msg = restantes > 0
+                    ? "Usuário não encontrado. Tentativas restantes: " + restantes
+                    : "Conta bloqueada por 1 minuto.";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(msg);
+
+        } catch (AuthenticationServiceException ex) {
+            loginAttemptService.loginFailed(username, ip);
+            int restantes = loginAttemptService.remainingAttempts(username);
+            String msg = restantes > 0
+                    ? "Senha incorreta. Tentativas restantes: " + restantes
+                    : "Conta bloqueada por 1 minuto.";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(msg);
+        }
+    }
+
+    // ─── Refresh Token ───────────────────────────────────────────────────────
+    @PostMapping("/refreshToken")
+    public ResponseEntity<?> refreshToken(@RequestBody String refreshToken) {
+        try {
+            var novoToken = refreshTokenUseCase.execute(refreshToken);
+            return ResponseEntity.ok(novoToken);
+        } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
