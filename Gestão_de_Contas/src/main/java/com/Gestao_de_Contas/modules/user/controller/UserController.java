@@ -36,20 +36,28 @@ public class UserController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+    private String getClientIp(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0];
+    }
 
     // ─── Login ───────────────────────────────────────────────────────────────
+
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @Valid @RequestBody AuthUserDTO request,
             HttpServletRequest httpRequest) {
 
-        String ip       = httpRequest.getRemoteAddr();
+        String ip       = getClientIp(httpRequest);
         String username = request.getUsername();
 
         // 1. Checa bloqueio antes de qualquer operação
         if (loginAttemptService.isBlocked(username, ip)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .body("Conta bloqueada por 1 minuto. Tente novamente em breve.");
+                    .body("Conta temporariamente bloqueada. Tente novamente em breve.");
         }
 
         try {
@@ -66,8 +74,8 @@ public class UserController {
             loginAttemptService.loginFailed(username, ip);
             int restantes = loginAttemptService.remainingAttempts(username);
             String msg = restantes > 0
-                    ? "Usuário não encontrado. Tentativas restantes: " + restantes
-                    : "Conta bloqueada por 1 minuto.";
+                    ? "Invalid credentials. Tentativas restantes: " + restantes
+                    : "Conta temporariamente bloqueada.";
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(msg);
 
         } catch (AuthenticationServiceException ex) {

@@ -35,3 +35,4 @@ build/
 # Variáveis de ambiente — NUNCA subir
 .env
 .env.*
+.env.production

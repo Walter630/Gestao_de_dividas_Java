@@ -26,8 +26,11 @@ public class LoginAttemptService {
 
     //acessa caso login falha
     public void loginFailed(String username, String ipAddress) {
-        increment(PREFIX_USER + username);
-        increment(PREFIX_IP + ipAddress);
+        String userKey = PREFIX_USER + normalize(username);
+        String ipKey = PREFIX_IP + ipAddress;
+
+        increment(userKey);
+        increment(ipKey);
     }
 
     //verifica se esta bloqueado
@@ -46,11 +49,19 @@ public class LoginAttemptService {
         // Define o TTL apenas na primeira tentativa
         if (count != null && count == 1) {
             redisTemplate.expire(key, BLOCK_TIME_SECONDS, TimeUnit.SECONDS);
+            //caso falhe ele aumenta o tempo de acordo com as tentativas
+        } else if (count != null) {
+            long dynamicTime = Math.min(300, (long) Math.pow(2, count));
+            redisTemplate.expire(key, dynamicTime, TimeUnit.SECONDS);
         }
     }
 
     private boolean isKeyBlocked(String key) {
         Integer count = redisTemplate.opsForValue().get(key);
         return count != null && count >=  MAX_ATTEMPTS;
+    }
+
+    private String normalize(String username) {
+        return username.toLowerCase().trim();
     }
 }
