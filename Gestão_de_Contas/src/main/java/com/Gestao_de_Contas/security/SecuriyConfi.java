@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
@@ -18,10 +19,13 @@ public class SecuriyConfi {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> {
                     //colocar o resto das rotas http
-                    auth.requestMatchers("/auth/login").permitAll();
+                    auth.requestMatchers(
+                            "/auth/login",
+                            "/auth/register"
+                            ).permitAll();
                     auth.anyRequest().authenticated();
                 })
-                .addFilterBefore(securityFilter, BasicAuthenticationFilter.class);
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

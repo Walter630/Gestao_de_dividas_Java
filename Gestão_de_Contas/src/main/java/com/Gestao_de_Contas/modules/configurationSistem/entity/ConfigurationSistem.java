@@ -1,6 +1,6 @@
 package com.Gestao_de_Contas.modules.configurationSistem.entity;
 
-import com.Gestao_de_Contas.modules.debt.entity.TaxType;
+import com.Gestao_de_Contas.modules.debt.entity.PaymentMode;
 import com.Gestao_de_Contas.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,7 +29,8 @@ public class ConfigurationSistem {
     private BigDecimal taxPadrao;
 
     @Enumerated(EnumType.STRING)
-    private TaxType tipo;
+    @Column(nullable = false)
+    private PaymentMode typePayment;
 
     private String whatsappTemplate;
 }

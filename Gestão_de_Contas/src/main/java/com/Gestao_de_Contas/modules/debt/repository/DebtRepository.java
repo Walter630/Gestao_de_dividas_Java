@@ -21,5 +21,5 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
 
     // Busca apenas as dívidas que ainda não foram pagas
     List<Debt> findByStatus(StatusDivida status);
-
+    List<Debt> findAllByUser_id(UUID user_id);
 }

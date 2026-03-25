@@ -1,67 +1,121 @@
 package com.Gestao_de_Contas.modules.debt.useCase;
 
+import com.Gestao_de_Contas.modules.debt.dto.CreateDebtDTO;
+import com.Gestao_de_Contas.modules.debt.dto.DebtBreakDown;
 import com.Gestao_de_Contas.modules.debt.entity.Debt;
+import com.Gestao_de_Contas.modules.debt.entity.StatusDivida;
 import com.Gestao_de_Contas.modules.debt.repository.DebtRepository;
+import com.Gestao_de_Contas.modules.payment.entity.Payment;
+import com.Gestao_de_Contas.modules.payment.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class DebtUseCase {
 
     private final DebtRepository debtRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
-    public Debt createDebt(Debt debtDTO) {
+    public Debt createDebt(@Valid CreateDebtDTO debtDTO) {
         return debtRepository.save(debtDTO);
     }
 
-    public BigDecimal calculeCurrenteValue(Debt debt) {
-        if (debt.getDataVencimento().isAfter(LocalDateTime.now())) {
-            return debt.getValor();
+    public DebtBreakDown calcJurosMensal(Debt debt) {
+        BigDecimal valueOriginal = debt.getValorOriginal();
+        // Soma pagamentos por tipo
+        BigDecimal totalJurosPay = debt.getPayments().stream() //pega a lista e transforma em um fluxo
+                .map(Payment::getTaxValue) //extrai o valor de cada pagamento
+                .reduce(BigDecimal.ZERO, BigDecimal::add); //ele soma tudo iniciando do zero
+
+        BigDecimal totalPrincipalPago = debt.getPayments().stream()
+                .map(Payment::getValuePrincipal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal jurosAcumulado = calcularJuros(valueOriginal, debt);
+        BigDecimal jurosPendentes = jurosAcumulado.subtract(totalJurosPay).max( //subtract ele subtrai oq foi pago de juros
+                BigDecimal.ZERO
+        );
+        BigDecimal saldoPrincipal = valueOriginal.subtract(totalPrincipalPago).max(BigDecimal.ZERO);
+
+        return new DebtBreakDown(
+                valueOriginal, jurosAcumulado, totalJurosPay, totalPrincipalPago, saldoPrincipal, jurosPendentes
+        );
+    }
+
+    //juros simples
+    public BigDecimal calcularJuros(BigDecimal valueOriginal, Debt debt) {
+        long meses = ChronoUnit.MONTHS.between(debt.getCreateAt(), LocalDateTime.now());
+        return valueOriginal.multiply(debt.getTaxJuros())
+                .multiply(new BigDecimal(meses))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+    public Debt getDebtId(UUID uuid) {
+        return debtRepository.findById(uuid).orElseThrow(() -> new RuntimeException(("divida not validate")));
+    }
+    // DebtUseCase.java
+    public Debt getDebtIdByUser(UUID debtId, UUID userId) {
+        Debt debt = getDebtId(debtId);
+        if (!debt.getUserId().getId().equals(userId)) {
+            throw new RuntimeException("Acesso negado"); // vira 403
         }
-        else if (debt.getDataVencimento().isBefore(LocalDateTime.now())) {
-            debt.setValorAtual(debt.getValorAtual().multiply(debt.getTaxValue()));
-            return debt.getValorAtual();
+        return debt;
+    }
+    @Transactional //tudo ou nada
+    public Payment addPayment(UUID debtId, Payment paymentDTO) {
+        Debt debt = getDebtId(debtId);
+        paymentDTO.setDebt(debt);
+        paymentDTO.setPaymentDate(LocalDateTime.now());
+        Payment saved = paymentRepository.save(paymentDTO);
+
+        updateStatus(debt); //atualiza os status automaticamente
+        return saved;
+    }
+
+    public Boolean isDebtQuick(Debt debt) {
+        DebtBreakDown breakDown = calcJurosMensal(debt);
+        return breakDown.getSaldoPrincipal().compareTo(BigDecimal.ZERO) == 0
+                && breakDown.getJurosPendentes().compareTo(BigDecimal.ZERO) == 0;
+    }
+
+    public BigDecimal calcularProximaParcela(Debt debt) {
+        DebtBreakDown breakdown = calcJurosMensal(debt);
+        // parcela = principal dividido pelo número de meses + juros do mês
+        BigDecimal parcelaPrincipal = breakdown.getSaldoPrincipal()
+                .divide(new BigDecimal(debt.getNumeroParcelas()), 2, RoundingMode.HALF_UP);
+        BigDecimal jurosMes = breakdown.getSaldoPrincipal()
+                .multiply(debt.getTaxJuros())
+                .setScale(2, RoundingMode.HALF_UP);
+        return parcelaPrincipal.add(jurosMes);
+    }
+
+    public Debt updateStatus(Debt debt) {
+        //se tiver quitada a divida entao os status ta ok
+        if (isDebtQuick(debt)) {
+            debt.setStatus(StatusDivida.PAGO);
+            //se a data de agora tiver passado da data de vencimento entt ta atrasado
+        } else if (LocalDateTime.now().isAfter(debt.getDataVencimento())) {
+            debt.setStatus(StatusDivida.ATRASADO);
+            // se nao for vazia mais tiver pagamento entt ta parcial
+        } else if (!debt.getPayments().isEmpty()) {
+            debt.setStatus(StatusDivida.PARCIAL);
+        } else { //se nao tiver nenhum caso desses ela ta pendente para ser paga
+            debt.setStatus(StatusDivida.PENDENTE);
         }
-
-        debt.setValorAtual(debt.getValor());
-
-        return switch (debt.getTaxType()) {
-            case FIXED -> calculeFixedValue(debt);
-            case PROGRESSIVE -> calculateProgressiveTax(debt);
-            default -> debt.getValor();
-        };
+        return debtRepository.save(debt);
     }
 
-    private BigDecimal calculeFixedValue(Debt debt) {
-        BigDecimal taxAmount = debt.getValor().multiply(debt.getTaxValue());
-        debt.setValorAtual(debt.getValor().add(taxAmount));
-        return debt.getValorAtual();
+    public List<Debt> getMyDebts(UUID debt) {
+        return debtRepository.findAllByUser_id(debt);
     }
-
-    private BigDecimal calculateProgressiveTax(Debt debt) {
-        long daysOverdue = java.time.Duration.between(debt.getDataVencimento(), LocalDateTime.now()).toDays();
-
-        // Regra: 5% base + 1% por dia, limitado a 50%
-        BigDecimal rate = BigDecimal.valueOf(0.05)
-                .add(BigDecimal.valueOf(daysOverdue * 0.01))
-                .min(BigDecimal.valueOf(0.50));
-
-        return debt.getValor().add(debt.getValor().multiply(rate));
-    }
-
-    public List<Debt> getAll() {
-        List<Debt> debts = debtRepository.findAll();
-        for (Debt debt : debts) {
-            calculeCurrenteValue(debt);
-        }
-        return debtRepository.findAll();
-    }
-
 }

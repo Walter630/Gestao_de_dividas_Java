@@ -21,7 +21,12 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private BigDecimal value;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentType paymentType;
+
+    private BigDecimal taxValue;
+    private BigDecimal valuePrincipal;
     private LocalDateTime paymentDate;
 
     @ManyToOne
