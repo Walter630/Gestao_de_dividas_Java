@@ -22,7 +22,8 @@ public class SecuriyConfi {
                     auth.requestMatchers(
                             "/auth/login",
                             "/auth/register",
-                            "/auth/refreshToken"
+                            "/auth/refreshToken",
+                            "/subscription/webhook"
                             ).permitAll();
                     auth.anyRequest().authenticated();
                 })

@@ -24,6 +24,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
     @Column(nullable = false)
+    private String email;
+    @Column(nullable = false)
     private String password;
     @Enumerated(EnumType.STRING) // ← agora faz sentido pois Role é um enum
     private Role role;

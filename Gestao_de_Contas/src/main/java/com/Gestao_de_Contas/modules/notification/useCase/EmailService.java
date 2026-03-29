@@ -1,6 +1,8 @@
 package com.Gestao_de_Contas.modules.notification.useCase;
 
+import com.Gestao_de_Contas.modules.notification.entity.DebtNotificationEventEntity;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -10,11 +12,16 @@ import org.springframework.stereotype.Service;
 public class EmailService {
     private final JavaMailSender mailSender;
 
-    public void enviarEmail(String email, String assunto, String corpo) {
+    @Value("${app.notification.destinatario}")
+    private String username;
+
+    public void enviarEmail(String emailDoCliente, String assunto, String mensagem) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject(assunto);
-        message.setText(corpo);
+        message.setTo(username);        // ✅ sempre pro seu email
+        message.setSubject(assunto);    // ✅ vem do buildAssunto()
+        message.setText(mensagem);      // ✅ vem do buildMensagem()
         mailSender.send(message);
+        System.out.println("✅ Email enviado para: " + username + " | Assunto: " + assunto);
     }
+
 }

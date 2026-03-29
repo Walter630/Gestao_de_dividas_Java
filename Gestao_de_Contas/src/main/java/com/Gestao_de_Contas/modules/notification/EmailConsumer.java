@@ -25,7 +25,7 @@ public class EmailConsumer {
         return switch (event.getTipo()) {
             case "ATRASADO" -> "Divida em atraso!";
             case "PENDENTE" -> "Divida esta Pendente";
-            case "PAGO" -> "Divida Quitada!!";
+            case "PAGO" -> "Divida Paga!!";
             case "PARCIAL" -> "Divida em parcial";
             default -> "Atualização da divida";
         };

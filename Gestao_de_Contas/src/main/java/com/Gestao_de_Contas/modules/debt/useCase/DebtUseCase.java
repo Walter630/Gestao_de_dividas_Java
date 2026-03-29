@@ -11,6 +11,7 @@ import com.Gestao_de_Contas.modules.notification.entity.DebtNotificationEventEnt
 import com.Gestao_de_Contas.modules.payment.entity.Payment;
 import com.Gestao_de_Contas.modules.payment.repository.PaymentRepository;
 import com.Gestao_de_Contas.modules.user.entity.User;
+import com.Gestao_de_Contas.security.PlanGuard;
 import com.Gestao_de_Contas.security.RabbitMQConfig;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -33,11 +34,17 @@ public class DebtUseCase {
     private final PaymentRepository paymentRepository;
     private final RabbitTemplate rabbitTemplate;
     private final ClientRepository clientRepository;
+    private final PlanGuard planGuard;
 
     @Transactional
     // converte DTO para entidade
     public Debt createDebt(@Valid CreateDebtDTO dto, User userLogado) {
+        //faz a validacao do plano
+
+        planGuard.checkDebtLimit(userLogado);
+
         Client client = clientRepository.findById(dto.getClientId()).orElseThrow(() -> new RuntimeException("Cliente nao encontrado"));
+
         Debt debt = Debt.builder()
                 .client(client)
                 .user(userLogado)
@@ -56,9 +63,9 @@ public class DebtUseCase {
                 RabbitMQConfig.EXCHANGE,
                 RabbitMQConfig.ROUTING,
                 new DebtNotificationEventEntity(
-                        userLogado.getUsername(),
+                        userLogado.getEmail(),
                         client.getName(),
-                        BigDecimal.ZERO, // juros zero na criação
+                        savedDebt.getValorOriginal(),
                         savedDebt.getDataVencimento(),
                         savedDebt.getStatus().toString()
                 )
@@ -156,7 +163,7 @@ public class DebtUseCase {
                 new DebtNotificationEventEntity(
                         debt.getUser().getUsername(),
                         debt.getClient().getName(),
-                        calcJurosMensal(debt).getJurosPendentes(),
+                        calcJurosMensal(debt).getSaldoPrincipal(),
                         debt.getDataVencimento(),
                         debt.getStatus().toString()
                 )
