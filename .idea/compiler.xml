@@ -13,10 +13,14 @@
         <module name="Gestao_de_Contas" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Gestao_de_Contassssssssssss" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Gestao_de_Contas" options="-parameters" />
+      <module name="Gestao_de_Contassssssssssss" options="-parameters" />
     </option>
   </component>
 </project>
