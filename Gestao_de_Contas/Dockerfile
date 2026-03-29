@@ -1,26 +1,20 @@
-# Estágio 1: Build
+# Estágio de Build
 FROM maven:3.9.6-eclipse-temurin-21 AS build
-
-# Define o diretório de trabalho ANTES de qualquer cópia
 WORKDIR /app
 
-# Primeiro copia apenas o pom.xml para baixar as dependências (melhora o cache)
+# Copia o pom.xml
 COPY pom.xml .
 RUN mvn dependency:go-offline
 
-# AGORA copia a pasta src inteira
-COPY src ./src
+# AQUI ESTÁ O PULO DO GATO: Use "Src" com S maiúsculo
+COPY Src ./Src
 
-# Build do JAR
+# No comando do Maven, ele vai procurar o código dentro de Src agora
 RUN mvn clean package -DskipTests
 
-# Estágio 2: Execução
+# Estágio Final
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-# Copia o JAR gerado no estágio anterior
 COPY --from=build /app/target/*.jar app.jar
-
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
