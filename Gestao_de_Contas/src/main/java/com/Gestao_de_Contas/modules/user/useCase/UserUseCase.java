@@ -22,7 +22,9 @@ public class UserUseCase {
             this.userRepository.findByUsername(user.getUsername())
                 .ifPresent(user1 -> {throw new RuntimeException("Nome ja existe");
             });
-
+            this.userRepository.findByEmail(user.getEmail())
+                    .ifPresent(user1 -> {throw new RuntimeException("Email ja existe");
+                    });
             var password = passwordEncoder.encode(user.getPassword());
             user.setPassword(password);
 

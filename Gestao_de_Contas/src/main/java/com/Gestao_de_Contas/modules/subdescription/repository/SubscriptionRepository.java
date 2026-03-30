@@ -11,6 +11,6 @@ import java.util.UUID;
 
 @Repository
 public interface SubscriptionRepository extends JpaRepository<Subscription, UUID> {
-    Optional<Subscription> findByUserAndStatus(User user, SubscriptionType status);
+    Optional<Subscription> findByUserAndType(User user, SubscriptionType type);
     Optional<Subscription> findByMercadoPagoPaymentId(String paymentId);
 }

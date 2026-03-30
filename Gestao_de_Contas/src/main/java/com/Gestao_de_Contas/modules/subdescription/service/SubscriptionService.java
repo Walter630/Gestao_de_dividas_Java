@@ -59,7 +59,7 @@ public class SubscriptionService {
                 .paymentMethodId("pix")  // ← define como Pix
                 .notificationUrl(notificationUrl)
                 .payer(PaymentPayerRequest.builder()
-                        .email(user.getUsername()) // ← usa o username como email por enquanto
+                        .email(user.getEmail()) // ← usa o username como email por enquanto
                         .build())
                 .build();
 
@@ -111,7 +111,11 @@ public class SubscriptionService {
     @Transactional
     public void confirmPayment(String paymentId) throws Exception {
         MercadoPagoConfig.setAccessToken(accessToken);
-
+        // ignora o ping de teste do Mercado Pago
+        if ("123456789".equals(paymentId)) {
+            System.out.println("Webhook de teste do MP ignorado.");
+            return;
+        }
         // busca o pagamento no Mercado Pago para confirmar
         PaymentClient client = new PaymentClient();
         Payment payment = client.get(Long.parseLong(paymentId));
@@ -139,7 +143,7 @@ public class SubscriptionService {
     // (4) retorna o plano ativo do usuário
     public Subscription getActiveSubscription(User user) {
         return subscriptionRepository
-                .findByUserAndStatus(user, SubscriptionType.ACTIVE)
+                .findByUserAndType(user, SubscriptionType.ACTIVE)
                 .orElse(null);
     }
 

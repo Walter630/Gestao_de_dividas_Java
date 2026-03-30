@@ -52,7 +52,7 @@ public class UserController {
             HttpServletRequest httpRequest) {
 
         String ip       = getClientIp(httpRequest);
-        String username = request.getUsername();
+        String username = request.getEmail();
 
         // 1. Checa bloqueio antes de qualquer operação
         if (loginAttemptService.isBlocked(username, ip)) {
