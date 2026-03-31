@@ -34,7 +34,7 @@ public class JWTProviders {
         Algorithm  algorithm = Algorithm.HMAC256(secretToken);
         var tokenCreate = JWT.create()
                 .withSubject(subject)
-                .withExpiresAt(Instant.now().plus(Duration.ofMinutes(1)))
+                .withExpiresAt(Instant.now().plus(Duration.ofMinutes(5)))
                 .sign(algorithm);
         return tokenCreate;
     }
