@@ -15,18 +15,20 @@ public class JWTProviders {
     private String secretToken;
 
     public String validateToken(String token){
+        if(token == null || token.isBlank()) return null;
         token = token.replace("Bearer ", "");
         Algorithm algorithm = Algorithm.HMAC256(secretToken);
 
         try{
+
             var subject = JWT.require(algorithm)
+                    .withIssuer("Gestao de Contas")
                     .build()
                     .verify(token)
                     .getSubject();
             return subject;
         }catch(JWTVerificationException e){
-            e.printStackTrace();
-            return "";
+            return null;
         }
     }
 
@@ -34,6 +36,7 @@ public class JWTProviders {
         Algorithm  algorithm = Algorithm.HMAC256(secretToken);
         var tokenCreate = JWT.create()
                 .withSubject(subject)
+                .withIssuer("Gestao de Contas")
                 .withExpiresAt(Instant.now().plus(Duration.ofMinutes(5)))
                 .sign(algorithm);
         return tokenCreate;

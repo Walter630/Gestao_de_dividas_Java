@@ -36,20 +36,25 @@ public class SecurityFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.replace("Bearer ", "");
             var subjectToken = this.jwtProvider.validateToken(token);
+            try {
+                if (subjectToken == null || subjectToken.isBlank()) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
 
-            if (subjectToken.isBlank()) {
+                // ✅ carrega o usuário do banco
+                User user = userRepository.findByUsername(subjectToken)
+                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                );
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (Exception e) {
+                SecurityContextHolder.clearContext();
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
-
-            // ✅ carrega o usuário do banco
-            User user = userRepository.findByUsername(subjectToken)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-            );
-            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
         filterChain.doFilter(request, response);

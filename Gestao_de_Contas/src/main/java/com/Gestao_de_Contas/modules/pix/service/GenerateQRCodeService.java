@@ -22,7 +22,7 @@ import java.util.Map;
 @Service
 public class GenerateQRCodeService {
 
-    private static final int TAMANHO_PADRAO = 300; // pixels
+    private static final int TAMANHO_PADRAO = 400; // pixels
 
     /**
      * Gera a imagem do QR Code e retorna em Base64 com prefixo data:image.
@@ -36,7 +36,7 @@ public class GenerateQRCodeService {
             Map<EncodeHintType, Object> hints = new HashMap<>();
             hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
             hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
-            hints.put(EncodeHintType.MARGIN, 1); // margem mínima (quiet zone)
+            hints.put(EncodeHintType.MARGIN, 4); // margem mínima (quiet zone)
 
             QRCodeWriter writer = new QRCodeWriter();
             BitMatrix bitMatrix = writer.encode(payload, BarcodeFormat.QR_CODE, tamanho, tamanho, hints);

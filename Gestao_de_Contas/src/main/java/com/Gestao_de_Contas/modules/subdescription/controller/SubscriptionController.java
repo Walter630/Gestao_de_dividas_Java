@@ -38,8 +38,9 @@ public class SubscriptionController {
                                         @RequestHeader(value = "x-signature", required = false)
                                         String signature) {
         try {
+            String type = (String) payload.get("type");
             // (3) extrai o ID do pagamento do payload
-            if (payload.containsKey("data")) {
+            if ("payment".equals(type) || payload.containsKey("data")) {
                 Map<String, Object> data = (Map<String, Object>) payload.get("data");
                 String paymentId = data.get("id").toString();
 

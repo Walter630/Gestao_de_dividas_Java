@@ -45,13 +45,4 @@ public class PixPlanService {
                 chave   // ou injetar via @Value
         );
     }
-
-    public String myPlano(PlanType plano) {
-        if (plano.getValor() == 0.0) {
-            return plano.getNome();
-        }
-        String payload = pixService.gerarPayload(plano.getValor(), "Assinatura " + plano.getNome(), null);
-        String qrCode = qrCodeService.gerarQRCodeBase64(payload);
-        return qrCode;
-    }
 }
