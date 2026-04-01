@@ -83,6 +83,6 @@ public class DebtController {
 
     @GetMapping()
     public ResponseEntity<List<Debt>> findMyDebts(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(debtUseCase.getMyDebts(user.getId()));
+        return ResponseEntity.ok(debtUseCase.getMyDebts(user));
     }
 }

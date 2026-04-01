@@ -35,7 +35,7 @@ public class AuthUserUseCase {
     //Tudo ou nada
     @Transactional
     public TokenDTO execute(AuthUserDTO authUserDTO){
-        var user = this.userRepository.findByUsername(authUserDTO.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+        var user = this.userRepository.findByEmail(authUserDTO.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
         var passwordMatches = this.passwordEncoder.matches(authUserDTO.getPassword(), user.getPassword());
         if(!passwordMatches){

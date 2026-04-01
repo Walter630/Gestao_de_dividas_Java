@@ -171,7 +171,7 @@ public class DebtUseCase {
         return saved;
     }
 
-    public List<Debt> getMyDebts(UUID debt) {
+    public List<Debt> getMyDebts(User debt) {
         return debtRepository.findAllByUser(debt);
     }
 

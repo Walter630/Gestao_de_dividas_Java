@@ -2,6 +2,7 @@ package com.Gestao_de_Contas.modules.debt.repository;
 
 import com.Gestao_de_Contas.modules.debt.entity.Debt;
 import com.Gestao_de_Contas.modules.debt.entity.StatusDivida;
+import com.Gestao_de_Contas.modules.user.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -22,6 +23,6 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
 
     // Busca apenas as dívidas que ainda não foram pagas
     List<Debt> findByStatus(StatusDivida status);
-    List<Debt> findAllByUser(UUID user);
+    List<Debt> findAllByUser(User user);
     long countByUser(@Param("userId") UUID userId);
 }
