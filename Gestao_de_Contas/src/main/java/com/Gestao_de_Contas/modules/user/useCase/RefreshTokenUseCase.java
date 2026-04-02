@@ -39,11 +39,12 @@ public class RefreshTokenUseCase {
 
             var user = storedToken.getUser();
             var newAccessToken = this.jwtProviders.generateToken(
-                    user.getUsername()
+                    user.getEmail()
             );
             var newRawRefresh = generateSecureToken();
             var newHash = TokenHashUtil.hashUtil(newRawRefresh);
-
+            System.out.print("teste" + newHash);
+            System.out.println("novo token" + newAccessToken);
             refreshTokenRepository.save(
                     RefreshToken.builder()
                             .token(newHash)

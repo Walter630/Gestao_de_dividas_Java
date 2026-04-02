@@ -17,6 +17,7 @@ public class RabbitMQConfig {
     public static final String EXCHANGE = "debt.notification.exchange";
     public static final String ROUTING  = "debt.notification";
 
+
     @Bean
     public Queue queue() {
         return new Queue(QUEUE, true);
@@ -51,5 +52,18 @@ public class RabbitMQConfig {
     @Bean
     public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
         return new RabbitAdmin(connectionFactory);
+    }
+
+
+
+    //-----------------------------CLIENT_-------------------------
+    public static final String CLIENTE_QUEUE = "cliente.notifications";
+    public static final String CLIENTE_ROUTING = "cliente.routing";
+    @Bean
+    public Queue queueClient() {return new Queue(CLIENTE_QUEUE, true);}
+
+    @Bean
+    public Binding bindingClient(Queue queueClient, DirectExchange exchange) {
+        return BindingBuilder.bind(queueClient).to(exchange).with(CLIENTE_ROUTING);
     }
 }

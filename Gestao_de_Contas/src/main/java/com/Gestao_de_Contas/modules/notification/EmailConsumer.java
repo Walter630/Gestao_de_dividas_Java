@@ -22,6 +22,7 @@ public class EmailConsumer {
     }
 
     private String buildAssunto(DebtNotificationEventEntity event) {
+        String nome = (event.getClientName() != null) ? event.getClientName() : "Cliente";
         return switch (event.getTipo()) {
             case "ATRASADO" -> "Divida em atraso!";
             case "PENDENTE" -> "Divida esta Pendente";
