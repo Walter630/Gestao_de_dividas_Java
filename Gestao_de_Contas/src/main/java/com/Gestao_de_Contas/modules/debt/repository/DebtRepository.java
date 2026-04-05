@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,5 +25,7 @@ public interface DebtRepository extends JpaRepository<Debt, UUID> {
     // Busca apenas as dívidas que ainda não foram pagas
     List<Debt> findByStatus(StatusDivida status);
     List<Debt> findAllByUser(User user);
-    long countByUser(@Param("userId") UUID userId);
+    long countByUser(@Param("userId") User userId);
+
+    List<Debt> findByUser(User userId);
 }

@@ -15,7 +15,7 @@ public class PlanGuard {
     private final DebtRepository debtRepository;
 
     public void checkDebtLimit(User user) {
-        long count = debtRepository.countByUser(user.getId());
+        long count = debtRepository.countByUser(user);
 
         if (!subscriptionService.canCreateDebt(user, count)) {
             throw new RuntimeException(

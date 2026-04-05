@@ -1,8 +1,7 @@
 package com.Gestao_de_Contas.modules.client.controller;
 
-import com.Gestao_de_Contas.modules.client.ClientDTO;
+import com.Gestao_de_Contas.modules.client.dto.ClientDTO;
 import com.Gestao_de_Contas.modules.client.entity.Client;
-import com.Gestao_de_Contas.modules.client.repository.ClientRepository;
 import com.Gestao_de_Contas.modules.client.useCase.ClientUseCase;
 import com.Gestao_de_Contas.modules.user.entity.User;
 import jakarta.validation.Valid;

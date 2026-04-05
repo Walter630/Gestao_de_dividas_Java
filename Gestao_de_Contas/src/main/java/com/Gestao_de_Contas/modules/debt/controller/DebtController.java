@@ -2,6 +2,7 @@ package com.Gestao_de_Contas.modules.debt.controller;
 
 import com.Gestao_de_Contas.modules.debt.dto.CreateDebtDTO;
 import com.Gestao_de_Contas.modules.debt.dto.DebtBreakDown;
+import com.Gestao_de_Contas.modules.debt.dto.DebtResponseDTO;
 import com.Gestao_de_Contas.modules.debt.entity.Debt;
 import com.Gestao_de_Contas.modules.debt.useCase.DebtUseCase;
 import com.Gestao_de_Contas.modules.user.entity.User;
@@ -34,55 +35,49 @@ public class DebtController {
     })
     // POST /debts → cria uma dívida
     @PostMapping
-    public ResponseEntity<?> createDebt(@Valid @RequestBody CreateDebtDTO debtdto, @AuthenticationPrincipal User userLogado) {
-        try{
+    public ResponseEntity<?> createDebt(@Valid @RequestBody CreateDebtDTO debtdto,
+                                        @AuthenticationPrincipal User userLogado) {
+        try {
             debtdto.setUserId(userLogado.getId());
-            return ResponseEntity.ok(debtUseCase.createDebt(debtdto, userLogado));
-        } catch(Exception ex){
+            return ResponseEntity.ok(debtUseCase.createDebt(debtdto, userLogado)); // useCase já retorna DTO
+        } catch (Exception ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-    @Operation(summary = "Get dividas por id")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Listado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Nada encontrado")
-    })
-    // GET /debts/{id} → busca dívida por ID
+
     @GetMapping("/{id}")
-    public ResponseEntity<Debt> getDebt(@PathVariable UUID id, @AuthenticationPrincipal User userLogado) {
-        Debt debt = debtUseCase.getDebtIdByUser(id, userLogado.getId());
-        if (!debt.getUser().getId().equals(userLogado.getId())) {
-            return ResponseEntity.status(403).build(); // usuário não é dono da dívida
-        }
-        return ResponseEntity.ok(debtUseCase.getDebtId(id));
+    public ResponseEntity<DebtResponseDTO> getDebt(@PathVariable UUID id,
+                                                   @AuthenticationPrincipal User userLogado) {
+        // ✅ getDebtIdByUser já faz a verificação de dono — checagem dupla removida
+        return ResponseEntity.ok(debtUseCase.getDebtByUser(id, userLogado.getId()));
     }
 
-    // GET /debts/{id}/breakdown → retorna o cálculo completo
     @GetMapping("/{id}/breakdown")
-    public ResponseEntity<DebtBreakDown> getBreakdown(@PathVariable UUID id, @AuthenticationPrincipal User userLogado) {
+    public ResponseEntity<DebtBreakDown> getBreakdown(@PathVariable UUID id,
+                                                      @AuthenticationPrincipal User userLogado) {
+        // breakdown usa Debt internamente — ok, nunca chega ao Jackson como entidade
         Debt debt = debtUseCase.getDebtIdByUser(id, userLogado.getId());
-        if (!debt.getUser().getId().equals(userLogado.getId())) {
-            return ResponseEntity.status(403).build(); // usuário não é dono da dívida
-        }
         return ResponseEntity.ok(debtUseCase.calcJurosMensal(debt));
     }
 
-    // GET /debts/{id}/proxima-parcela → valor da próxima parcela
     @GetMapping("/{id}/proxima-parcela")
-    public ResponseEntity<BigDecimal> getProximaParcela(@PathVariable UUID id) {
-        Debt debt = debtUseCase.getDebtId(id);
+    public ResponseEntity<BigDecimal> getProximaParcela(@PathVariable UUID id,
+                                                        @AuthenticationPrincipal User userLogado) {
+        Debt debt = debtUseCase.getDebtIdByUser(id, userLogado.getId()); // ✅ garante que é dono
         return ResponseEntity.ok(debtUseCase.calcularProximaParcela(debt));
     }
 
-    // PUT /debts/{id}/status → atualiza o status da dívida
     @PutMapping("/{id}/status")
-    public ResponseEntity<Debt> atualizarStatus(@PathVariable UUID id) {
-        Debt debt = debtUseCase.getDebtId(id);
-        return ResponseEntity.ok(debtUseCase.updateStatus(debt));
+    public ResponseEntity<DebtResponseDTO> atualizarStatus(@PathVariable UUID id,
+                                                           @AuthenticationPrincipal User userLogado) {
+        Debt debt = debtUseCase.getDebtIdByUser(id, userLogado.getId()); // ✅ garante que é dono
+        return ResponseEntity.ok(debtUseCase.updateStatusDTO(debt)); // ← novo método no useCase
     }
 
-    @GetMapping()
-    public ResponseEntity<List<Debt>> findMyDebts(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(debtUseCase.getMyDebts(user));
+    @GetMapping
+    public ResponseEntity<List<DebtResponseDTO>> findMyDebts(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(debtUseCase.listarTodas(user)); // ✅ já retorna DTO
     }
+
+// /getAll é redundante com GET / — pode remover depois
 }

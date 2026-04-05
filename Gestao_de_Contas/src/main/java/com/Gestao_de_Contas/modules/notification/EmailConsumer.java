@@ -41,7 +41,7 @@ public class EmailConsumer {
                                     Valor pendente: R$ %s
                                     Vencimento: %s
                     
-                                    Acesse o sistema para mais detalhes.
+                                    Acesse o sistema para mais detalhes "http://localhost:5173/login".
                     """,
                     event.getClientName(),
                     event.getValorPendente(),
@@ -54,7 +54,7 @@ public class EmailConsumer {
                                     Valor: R$ %s
                                     Vencimento: %s
                     
-                                    Acesse o sistema para mais detalhes.
+                                    Acesse o sistema para mais detalhes "http://localhost:5173/login".
                     """,
                     event.getClientName(),
                     event.getValorPendente(),
@@ -79,7 +79,7 @@ public class EmailConsumer {
                     
                     A dívida do cliente %s foi totalmente quitada!
                     
-                    Acesse o sistema para mais detalhes.
+                    Acesse o sistema para mais detalhes "http://localhost:5173/login".
                     """,
                     event.getClientName()
             );

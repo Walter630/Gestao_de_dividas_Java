@@ -1,6 +1,6 @@
 package com.Gestao_de_Contas.modules.client.useCase;
 
-import com.Gestao_de_Contas.modules.client.ClientDTO;
+import com.Gestao_de_Contas.modules.client.dto.ClientDTO;
 import com.Gestao_de_Contas.modules.client.entity.Client;
 import com.Gestao_de_Contas.modules.client.entity.ClientNotificationEventEntity;
 import com.Gestao_de_Contas.modules.client.repository.ClientRepository;
@@ -12,7 +12,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 
-import javax.management.Notification;
 import java.util.List;
 import java.util.UUID;
 

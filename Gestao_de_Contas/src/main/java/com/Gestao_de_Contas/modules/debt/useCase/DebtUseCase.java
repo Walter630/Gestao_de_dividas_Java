@@ -4,6 +4,7 @@ import com.Gestao_de_Contas.modules.client.entity.Client;
 import com.Gestao_de_Contas.modules.client.repository.ClientRepository;
 import com.Gestao_de_Contas.modules.debt.dto.CreateDebtDTO;
 import com.Gestao_de_Contas.modules.debt.dto.DebtBreakDown;
+import com.Gestao_de_Contas.modules.debt.dto.DebtResponseDTO;
 import com.Gestao_de_Contas.modules.debt.entity.Debt;
 import com.Gestao_de_Contas.modules.debt.entity.StatusDivida;
 import com.Gestao_de_Contas.modules.debt.repository.DebtRepository;
@@ -35,10 +36,26 @@ public class DebtUseCase {
     private final RabbitTemplate rabbitTemplate;
     private final ClientRepository clientRepository;
     private final PlanGuard planGuard;
-
+    private DebtResponseDTO toDTO(Debt debt) {
+        return new DebtResponseDTO(
+                debt.getId(),
+                debt.getDescricao(),
+                debt.getDevedorName(),
+                debt.getValorOriginal(),
+                debt.getStatus(),
+                debt.getDataVencimento(),
+                debt.getTaxType(),
+                debt.getTaxJuros(),
+                debt.getNumeroParcelas(),
+                debt.getClient().getId(),
+                debt.getClient().getName(),
+                debt.getCreateAt(),
+                debt.getUpdateAt()
+        );
+    }
     @Transactional
     // converte DTO para entidade
-    public Debt createDebt(@Valid CreateDebtDTO dto, User userLogado) {
+    public DebtResponseDTO createDebt(@Valid CreateDebtDTO dto, User userLogado) {
         //faz a validacao do plano
 
         planGuard.checkDebtLimit(userLogado);
@@ -70,36 +87,45 @@ public class DebtUseCase {
                         savedDebt.getStatus().toString()
                 )
         );
-        return savedDebt;
+        return toDTO(savedDebt);
     }
 
     public DebtBreakDown calcJurosMensal(Debt debt) {
         BigDecimal valueOriginal = debt.getValorOriginal();
-        // Soma pagamentos por tipo
-        BigDecimal totalJurosPay = debt.getPayments().stream() //pega a lista e transforma em um fluxo
-                .map(Payment::getTaxValue) //extrai o valor de cada pagamento
-                .reduce(BigDecimal.ZERO, BigDecimal::add); //ele soma tudo iniciando do zero
+
+        BigDecimal totalJurosPay = debt.getPayments().stream()
+                .map(Payment::getTaxValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalPrincipalPago = debt.getPayments().stream()
                 .map(Payment::getValuePrincipal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal jurosAcumulado = calcularJuros(valueOriginal, debt);
-        BigDecimal jurosPendentes = jurosAcumulado.subtract(totalJurosPay).max( //subtract ele subtrai oq foi pago de juros
-                BigDecimal.ZERO
-        );
-        BigDecimal saldoPrincipal = valueOriginal.subtract(totalPrincipalPago).max(BigDecimal.ZERO);
+        BigDecimal jurosAcumulado = calcularJuros(valueOriginal, debt); // ← agora usa dias fracionados
+
+        BigDecimal jurosPendentes = jurosAcumulado
+                .subtract(totalJurosPay)
+                .max(BigDecimal.ZERO);
+
+        BigDecimal saldoPrincipal = valueOriginal
+                .subtract(totalPrincipalPago)
+                .max(BigDecimal.ZERO);
 
         return new DebtBreakDown(
-                valueOriginal, jurosAcumulado, totalJurosPay, totalPrincipalPago, saldoPrincipal, jurosPendentes
+                valueOriginal, jurosAcumulado, totalJurosPay,
+                totalPrincipalPago, saldoPrincipal, jurosPendentes
         );
     }
 
     //juros simples
     public BigDecimal calcularJuros(BigDecimal valueOriginal, Debt debt) {
-        long meses = ChronoUnit.MONTHS.between(debt.getCreateAt(), LocalDateTime.now());
-        return valueOriginal.multiply(debt.getTaxJuros())
-                .multiply(new BigDecimal(meses))
+        long dias = ChronoUnit.DAYS.between(debt.getDataVencimento(), LocalDateTime.now());
+
+        BigDecimal mesesFracionados = new BigDecimal(Math.max(0, dias))
+                .divide(new BigDecimal(30), 4, RoundingMode.HALF_UP);
+        return valueOriginal
+                .multiply(debt.getTaxJuros())
+                .multiply(mesesFracionados)
                 .setScale(2, RoundingMode.HALF_UP);
     }
     public Debt getDebtId(UUID uuid) {
@@ -113,6 +139,10 @@ public class DebtUseCase {
         }
         return debt;
     }
+
+    public DebtResponseDTO getDebtByUser(UUID debtId, UUID userId) {
+        return toDTO(getDebtIdByUser(debtId, userId)); // reutiliza o de cima
+    }
     @Transactional //tudo ou nada
     public Payment addPayment(UUID debtId, Payment paymentDTO) {
         Debt debt = getDebtId(debtId);
@@ -120,7 +150,7 @@ public class DebtUseCase {
         paymentDTO.setPaymentDate(LocalDateTime.now());
         Payment saved = paymentRepository.save(paymentDTO);
 
-        updateStatus(debt); //atualiza os status automaticamente
+        updateStatusDTO(debt); //atualiza os status automaticamente
         return saved;
     }
 
@@ -168,12 +198,19 @@ public class DebtUseCase {
                         debt.getStatus().toString()
                 )
         );
-        return saved;
+        return debt;
     }
 
-    public List<Debt> getMyDebts(User debt) {
-        return debtRepository.findAllByUser(debt);
+    // updateStatusDTO também precisa existir
+    public DebtResponseDTO updateStatusDTO(Debt debt) {
+        return toDTO(updateStatus(debt));
     }
 
+    public List<DebtResponseDTO> listarTodas(User userId) {
+        return debtRepository.findByUser(userId)
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
 
 }
