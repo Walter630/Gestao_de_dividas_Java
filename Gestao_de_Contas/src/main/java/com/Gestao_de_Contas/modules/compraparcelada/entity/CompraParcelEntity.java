@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tb_comprasParceladas")
-public class CompareParcelEntity {
+public class CompraParcelEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -35,7 +35,7 @@ public class CompareParcelEntity {
     @Column(nullable = false)
     private Integer valorTotal;
     @Column(nullable = false)
-    private Long quantidadeParcelas;
+    private Integer quantidadeParcelas;
     private String categoria;
     private Boolean juros;
     private Integer taxaJuros;
