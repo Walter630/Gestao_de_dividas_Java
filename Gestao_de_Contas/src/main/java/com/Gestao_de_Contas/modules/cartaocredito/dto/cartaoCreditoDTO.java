@@ -11,7 +11,7 @@ public record cartaoCreditoDTO(
         String name,
 
         @NotNull
-        Integer limit,
+        Integer valorLimite,
 
         @NotNull
         Integer limitDisponivel,
@@ -26,7 +26,6 @@ public record cartaoCreditoDTO(
         @Max(31)
         Integer diaVencimento,
 
-        Boolean ativo,
-        UUID userId
+        Boolean ativo
 ) {
 }

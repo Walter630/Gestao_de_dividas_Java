@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/cartCredito")
@@ -23,17 +24,26 @@ public class cartaoCreditoController {
 
     @PostMapping
     public ResponseEntity<CartCreditEntity> save(@Valid @RequestBody cartaoCreditoDTO cartCreditEntity, @AuthenticationPrincipal User userLogad) {
-        try {
             var cartaoResult = cartaoCreditoService.create(cartCreditEntity, userLogad);
             return ResponseEntity.ok(cartaoResult);
-        }catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
     @GetMapping
     public ResponseEntity<List<CartCreditEntity>> findAll(@AuthenticationPrincipal User userLogad) {
-        cartaoCreditoService.findAllByUser(userLogad);
-        return ResponseEntity.ok().build();
+        List<CartCreditEntity> cartoes = cartaoCreditoService.findAllByUser(userLogad);
+        return ResponseEntity.ok(cartoes);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CartCreditEntity> findById(@PathVariable UUID id) {
+        // Agora retornando um único objeto, não uma lista
+        return ResponseEntity.ok(cartaoCreditoService.findById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        cartaoCreditoService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

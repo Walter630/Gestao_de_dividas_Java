@@ -53,7 +53,7 @@ public class RefreshTokenUseCase {
                             .build()
             );
 
-            return new TokenDTO(newAccessToken, newRawRefresh); // ← par completo
+            return new TokenDTO(newAccessToken, newRawRefresh, newHash, token); // ← par completo
     }
 
     private String generateSecureToken() {

@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface cartaoCreditoRepository extends JpaRepository<CartCreditEntity, UUID> {
+public interface CartaoCreditoRepository extends JpaRepository<CartCreditEntity, UUID> {
     Optional<CartCreditEntity> findByName(String name);
     List<CartCreditEntity> findByUser(User userId);
 }

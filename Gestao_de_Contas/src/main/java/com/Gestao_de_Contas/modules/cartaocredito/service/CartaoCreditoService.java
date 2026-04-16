@@ -2,7 +2,7 @@ package com.Gestao_de_Contas.modules.cartaocredito.service;
 
 import com.Gestao_de_Contas.modules.cartaocredito.dto.cartaoCreditoDTO;
 import com.Gestao_de_Contas.modules.cartaocredito.entity.CartCreditEntity;
-import com.Gestao_de_Contas.modules.cartaocredito.repository.cartaoCreditoRepository;
+import com.Gestao_de_Contas.modules.cartaocredito.repository.CartaoCreditoRepository;
 import com.Gestao_de_Contas.modules.user.entity.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class CartaoCreditoService { // Nome corrigido para PascalCase
-    private final cartaoCreditoRepository repository;
+    private final CartaoCreditoRepository repository;
 
     @Transactional // Boa prática para operações de escrita
     public CartCreditEntity create(cartaoCreditoDTO dto, User userLogado) {
@@ -25,10 +25,10 @@ public class CartaoCreditoService { // Nome corrigido para PascalCase
         // 2. Construção da Entity com mapeamento correto
         CartCreditEntity cartao = CartCreditEntity.builder()
                 .name(dto.name())
-                .limit(dto.limit())
-                .limitDiponivel(dto.limitDisponivel()) // Cuidado com o erro de digitação 'Diponivel' vs 'Disponivel'
+                .valorLimite(dto.valorLimite())
+                .limitDisponivel(dto.limitDisponivel())
                 .diaFechamento(dto.diaFechamento())
-                .dataVencimento(dto.diaVencimento()) // Use o nome que está no DTO
+                .diaVencimento(dto.diaVencimento())
                 .ativo(dto.ativo() != null ? dto.ativo() : true)
                 .user(userLogado)
                 .build();
@@ -48,9 +48,18 @@ public class CartaoCreditoService { // Nome corrigido para PascalCase
 
         // Atualiza apenas o que faz sentido
         existente.setName(dto.name());
-        existente.setLimit(dto.limit());
-        existente.setLimitDiponivel(dto.limitDisponivel());
+        existente.setValorLimite(dto.valorLimite());
+        existente.setLimitDisponivel(dto.limitDisponivel());
 
         return repository.save(existente);
+    }
+
+    public CartCreditEntity findById(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cartão não encontrado"));
+    }
+
+    public void deleteById(UUID id) {
+        repository.deleteById(id);
     }
 }

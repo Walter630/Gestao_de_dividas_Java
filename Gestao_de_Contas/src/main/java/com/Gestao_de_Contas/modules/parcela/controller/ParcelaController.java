@@ -33,8 +33,8 @@ public class ParcelaController {
 
     //============================== UPDATE ==============================
 
-    @PutMapping
-    public ResponseEntity<ParcelaDTO> update(@RequestBody ParcelaDTO parcelaDTO, UUID id) {
+    @PutMapping("/{id}")
+    public ResponseEntity<ParcelaDTO> update(@RequestBody ParcelaDTO parcelaDTO, @PathVariable UUID id) {
         return ResponseEntity.status(HttpStatus.CREATED).body(parcelaService.update(id, parcelaDTO));
     }
 
@@ -51,5 +51,19 @@ public class ParcelaController {
     @GetMapping("/{id}")
     public ResponseEntity<ParcelaDTO> findById(@PathVariable UUID id) {
         return ResponseEntity.ok().body(parcelaService.findById(id));
+    }
+
+    //============================== FINDBYCART ==============================
+
+    @GetMapping("/cartao/{id}")
+    public ResponseEntity<List<ParcelaDTO>> getByCard(@PathVariable("id") UUID cartaoId) {
+        return ResponseEntity.ok().body(parcelaService.findByCartaoId(cartaoId));
+    }
+
+    //============================== FINDFORMONTH ==============================
+
+    @GetMapping("/mensal")
+    public ResponseEntity<List<ParcelaDTO>> getMensal(@RequestParam Integer year, @RequestParam Integer month) {
+        return ResponseEntity.ok().body(parcelaService.findByMonth(year, month));
     }
 }

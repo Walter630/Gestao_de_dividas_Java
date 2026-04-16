@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +41,7 @@ class ParcelaServiceTest {
         return new ParcelaDTO(
                 2,
                 2000.0,
-                LocalDateTime.now().plusDays(30),
+                LocalDate.now().plusDays(30),
                 StatusDivida.PENDENTE,
                 null,
                 0

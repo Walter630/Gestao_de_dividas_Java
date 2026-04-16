@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,12 +31,14 @@ public class ParcelEntity {
     @Column(nullable = false)
     private Integer numeroParcela;
     private Double valor;
-    @Column(nullable = false)
-    private LocalDateTime dataVencimento;
+    @Column(name = "data_vencimento")
+    private LocalDate dataVencimento;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private StatusDivida status;
+    @Column(name = "data_pagamento")
     private LocalDateTime dataPagamento;
+    @Column(name = "valor_pago")
     private Integer valorPago;
 
     @CreationTimestamp

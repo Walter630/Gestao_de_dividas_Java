@@ -16,14 +16,6 @@ public class CompraParceladaController {
     @Autowired
     private CompraParceladaService compraParceladaService;
 
-    //============================== CREATE ==============================
-
-    @PostMapping
-    public ResponseEntity<CompraParceladaDTO> compraParcelada(@RequestBody CompraParceladaDTO compraParceladaDTO) {
-        var result = this.compraParceladaService.create(compraParceladaDTO);
-        return ResponseEntity.ok().body(result);
-    }
-
     //============================== GETALL ==============================
 
     @GetMapping
@@ -40,8 +32,18 @@ public class CompraParceladaController {
 
     //============================== DELETE ==============================
 
-    @DeleteMapping
-    public ResponseEntity<CompraParceladaDTO> deleteCompraParceladaById(@PathVariable UUID id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCompraParceladaById(@PathVariable UUID id) {
+        this.compraParceladaService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
+
+    //============================== ENDPOINT DE CRIAÇÃO (COM PARCELAS) ==============================
+    @PostMapping
+    public ResponseEntity<CompraParceladaDTO> create(@RequestBody CompraParceladaDTO dto) {
+        // Chamamos o método salvarCompra para que ele gere as parcelas automaticamente
+        CompraParceladaDTO novaCompra = compraParceladaService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(novaCompra);
+    }
+
 }

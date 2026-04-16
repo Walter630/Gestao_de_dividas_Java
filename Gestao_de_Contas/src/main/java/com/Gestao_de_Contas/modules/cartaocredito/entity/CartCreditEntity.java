@@ -24,14 +24,14 @@ public class CartCreditEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
-    @Column(nullable = false)
-    private Integer limit;
-    @Column(nullable = false)
-    private Integer limitDiponivel;
-    @Column(nullable = false)
+    @Column(name = "valor_limite")
+    private Integer valorLimite;
+    @Column(name = "limit_disponivel")
+    private Integer limitDisponivel;
+    @Column(name = "dia_fechamento")
     private Integer diaFechamento;
-    @Column(nullable = false)
-    private Integer dataVencimento;
+    @Column(name = "data_vencimento")
+    private Integer diaVencimento;
 
     private Boolean ativo;
 

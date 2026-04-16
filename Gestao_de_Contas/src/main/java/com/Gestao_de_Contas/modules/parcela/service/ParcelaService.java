@@ -1,5 +1,6 @@
 package com.Gestao_de_Contas.modules.parcela.service;
 
+import com.Gestao_de_Contas.modules.cartaocredito.entity.CartCreditEntity;
 import com.Gestao_de_Contas.modules.parcela.dto.ParcelaDTO;
 import com.Gestao_de_Contas.modules.parcela.entity.ParcelEntity;
 import com.Gestao_de_Contas.modules.parcela.mapper.ParcelaMapper;
@@ -63,6 +64,24 @@ public class ParcelaService {
         return this.parcelaRepository.findAll()
                 .stream()
                 .map(parcelaMapper::toDTO)// Converte cada item da lista
+                .toList();
+    }
+
+    //============================== FINDBYCART ==============================
+
+    public List<ParcelaDTO> findByCartaoId(UUID cartaoId) {
+        return parcelaRepository.findByCompraId_CartaoCredito_Id(cartaoId)
+                .stream()
+                .map(parcelaMapper::toDTO) // Seu método que converte Entity para DTO
+                .toList();
+    }
+
+    //============================== FINDBYMONTH ==============================
+
+    public List<ParcelaDTO> findByMonth(int year, int month) {
+        return parcelaRepository.findByDataVencimentoMonthAndDataVencimentoYear(month, year)
+                .stream()
+                .map(parcelaMapper::toDTO)
                 .toList();
     }
 }

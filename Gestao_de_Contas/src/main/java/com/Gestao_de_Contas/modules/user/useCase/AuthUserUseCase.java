@@ -60,6 +60,6 @@ public class AuthUserUseCase {
                         .build()
         );
 
-        return new TokenDTO(generateTokenUser, rawRefresh);
+        return new TokenDTO(generateTokenUser, rawRefresh, user.getId().toString(), user.getRole().name());
     }
 }

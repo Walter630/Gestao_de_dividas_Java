@@ -21,12 +21,11 @@ public class JWTProviders {
 
         try{
 
-            var subject = JWT.require(algorithm)
+            return JWT.require(algorithm)
                     .withIssuer("Gestao de Contas")
                     .build()
                     .verify(token)
                     .getSubject();
-            return subject;
         }catch(JWTVerificationException e){
             return null;
         }
@@ -34,11 +33,10 @@ public class JWTProviders {
 
     public String generateToken(String subject) {
         Algorithm  algorithm = Algorithm.HMAC256(secretToken);
-        var tokenCreate = JWT.create()
+        return JWT.create()
                 .withSubject(subject)
                 .withIssuer("Gestao de Contas")
                 .withExpiresAt(Instant.now().plus(Duration.ofMinutes(5)))
                 .sign(algorithm);
-        return tokenCreate;
     }
 }

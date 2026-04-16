@@ -5,6 +5,7 @@ import com.Gestao_de_Contas.modules.parcela.entity.ParcelEntity;
 import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.NumberFormat;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record ParcelaDTO (
@@ -14,12 +15,13 @@ public record ParcelaDTO (
         Double valor,
         @NotNull
         @FutureOrPresent
-        LocalDateTime dataVencimento,
+        LocalDate dataVencimento,
         StatusDivida status,
         @PastOrPresent
         LocalDateTime dataPagamento,
         @NotNull
         Integer valorPago
+
 ) {
     // Método para converter Entity -> DTO
     public static ParcelaDTO fromEntity(ParcelEntity entity) {
