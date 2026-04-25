@@ -79,5 +79,11 @@ public class DebtController {
         return ResponseEntity.ok(debtUseCase.listarTodas(user)); // ✅ já retorna DTO
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<DebtResponseDTO> deleteDebt(@PathVariable UUID id) {
+        this.debtUseCase.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 // /getAll é redundante com GET / — pode remover depois
 }

@@ -37,6 +37,7 @@ public class DebtUseCase {
     private final ClientRepository clientRepository;
     private final PlanGuard planGuard;
     private DebtResponseDTO toDTO(Debt debt) {
+
         return new DebtResponseDTO(
                 debt.getId(),
                 debt.getDescricao(),
@@ -145,13 +146,18 @@ public class DebtUseCase {
     }
     @Transactional //tudo ou nada
     public Payment addPayment(UUID debtId, Payment paymentDTO) {
-        Debt debt = getDebtId(debtId);
-        paymentDTO.setDebt(debt);
+        Debt debt = debtRepository.findById(debtId).orElseThrow(() -> new RuntimeException(("divida not validate")));
+        paymentDTO.setDebt(this);
         paymentDTO.setPaymentDate(LocalDateTime.now());
         Payment saved = paymentRepository.save(paymentDTO);
 
         updateStatusDTO(debt); //atualiza os status automaticamente
         return saved;
+    }
+
+    public void addPaymentt(Payment paymentDTO) {
+        this.paymentRepository.save(paymentDTO);
+        paymentDTO.setDebt(this);
     }
 
     public Boolean isDebtQuick(Debt debt) {
@@ -211,6 +217,10 @@ public class DebtUseCase {
                 .stream()
                 .map(this::toDTO)
                 .toList();
+    }
+
+    public void delete(UUID id) {
+        debtRepository.deleteById(id);
     }
 
 }

@@ -1,17 +1,25 @@
-events {
-    worker_connections 1024;
-}
+# nginx.conf
+server {
+    listen 80;
 
-http {
-    server {
-        listen 80;
+    # ✅ Bloquear .git e arquivos sensíveis
+    location ~ /\.(git|env|svn|htaccess|DS_Store) {
+        deny all;
+        return 404;
+    }
 
-        location / {
-            proxy_pass http://app:8080;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
+    # ✅ Bloquear extensões perigosas
+    location ~* \.(bak|config|sql|log|sh|class|jar|war|properties)$ {
+        deny all;
+        return 404;
+    }
+
+    # ✅ Proxy para o Spring Boot
+    location / {
+        proxy_pass http://app:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-

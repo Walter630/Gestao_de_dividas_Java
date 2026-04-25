@@ -4,11 +4,12 @@ WORKDIR /app
 
 # 1. Copia o pom.xml primeiro para cache de dependências
 COPY pom.xml .
+
 RUN mvn dependency:go-offline -B
 
 # 2. Copia o código fonte
 COPY src ./src
-
+RUN rm -rf .git          # Remove o .git antes de buildar
 # 3. Build do projeto
 RUN mvn clean package -DskipTests -B
 

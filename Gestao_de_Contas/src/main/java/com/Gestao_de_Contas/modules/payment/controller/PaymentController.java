@@ -22,4 +22,10 @@ public class PaymentController {
             @RequestBody Payment payment) {
         return ResponseEntity.ok(debtUseCase.addPayment(debtId, payment));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Payment> deletePayment(@PathVariable UUID debtId) {
+        this.debtUseCase.delete(debtId);
+        return ResponseEntity.noContent().build();
+    }
 }

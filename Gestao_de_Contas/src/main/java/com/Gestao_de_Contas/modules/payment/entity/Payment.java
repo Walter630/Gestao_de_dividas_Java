@@ -1,6 +1,7 @@
 package com.Gestao_de_Contas.modules.payment.entity;
 
 import com.Gestao_de_Contas.modules.debt.entity.Debt;
+import com.Gestao_de_Contas.modules.debt.useCase.DebtUseCase;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +31,9 @@ public class Payment {
     private LocalDateTime paymentDate;
 
     @ManyToOne
-    @JoinColumn(name = "debt_id", nullable = false)
+    @JoinColumn(name = "debt_id")
     private Debt debt;
+
+    public void setDebt(DebtUseCase debtUseCase) {
+    }
 }
